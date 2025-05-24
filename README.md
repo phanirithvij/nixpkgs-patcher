@@ -225,3 +225,36 @@ After installing nixpkgs-patcher, you can apply patches from your config without
   };
 }
 ```
+
+## TODO
+
+- work with other flake outputs, not just `nixosConfiguration`
+- set metadata correctly for the flakes and patched nixpkgs
+
+## Comparison with Alternatives
+
+This flake focuses on ease of use for patching nixpkgs and using it with NixOS.
+It requires less effort to understand and quickly start using it compared to alternatives.
+However, if you want to patch other flake inputs or use patches inside packages or devshells, check out the alternatives!
+
+| | nixpkgs-patcher | [nix-patcher](https://github.com/katrinafyi/nix-patcher) | [flake-input-patcher](https://github.com/jfly/flake-input-patcher) |
+|------------------------------                                               |----|----|----|
+| Patches from flake inputs                                                   | ✅ | ✅ | ❌ |
+| Patches using fetchpatch                                                    | ✅ | ❌ | ✅ |
+| Patches in NixOS modules                                                    | ✅ | ❌ | ❌ |
+| Local only                                                                  | ✅ | ❌ | ✅ |
+| Doesn't require additional tools                                            | ✅ | ❌ | ✅ |
+| Automatic `system` detection                                                | ✅ | ✅ | ❌ |
+| Works for any flake                                                         | ❌ | ✅ | ✅ |
+| [IFD](https://nix.dev/manual/nix/2.29/language/import-from-derivation) free | ❌ | ✅ | ❌ |
+
+## Contributing
+
+Bug reports, feature requests, and PRs are welcome!
+
+## Credits
+
+- people involved in [the issue about patching flake inputs](https://github.com/NixOS/nix/issues/3920)
+- [patch-nixpkgs article](https://ertt.ca/nix/patch-nixpkgs/)
+- [flake-input-patcher](https://github.com/jfly/flake-input-patcher)
+- [nix-patcher](https://github.com/katrinafyi/nix-patcher)
