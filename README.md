@@ -172,6 +172,9 @@ This is the fastest way in my opinion, because all you have to do is add a flake
 }
 ```
 
+> [!WARNING]  
+> Using URLs like `https://github.com/NixOS/nixpkgs/pull/410328.diff` may be shorter and more convenient, but please be aware that this approach was unofficially rate limited to approximately 1 request per minute, with an initial limit of 5 requests in the past. It is advisable to use the longer format to avoid potential issues.
+
 ### Using nixpkgsPatcher Config
 
 You can also define patches similarly to how you configured this flake. Provide a `nixpkgsPatcher.patches` attribute to `nixosSystem` that takes in `pkgs` and outputs a list of patches.
