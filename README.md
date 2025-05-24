@@ -243,6 +243,7 @@ However, if you want to patch other flake inputs or use patches inside packages 
 | Patches using fetchpatch                                                    | ✅ | ❌ | ✅ |
 | Patches in NixOS modules                                                    | ✅ | ❌ | ❌ |
 | Local only                                                                  | ✅ | ❌ | ✅ |
+| No extra eval time for local patching (cached)                              | ❌ | ✅ | ❌ |
 | Doesn't require additional tools                                            | ✅ | ❌ | ✅ |
 | Automatic `system` detection                                                | ✅ | ✅ | ❌ |
 | Works for any flake                                                         | ❌ | ✅ | ✅ |
