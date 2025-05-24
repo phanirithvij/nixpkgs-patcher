@@ -252,6 +252,68 @@ However, if you want to patch other flake inputs or use patches inside packages 
 | Works for any flake                                                         | ❌ | ✅ | ✅ |
 | [IFD](https://nix.dev/manual/nix/2.29/language/import-from-derivation) free | ❌ | ✅ | ❌ |
 
+### Why Not Just Use Overlays?
+
+For individual packages, using overlays can appear straightforward:
+
+1. Add the forked nixpkgs by a branch reference:
+
+```nix
+# file: flake.nix
+{
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs-git-review-bump.url = "github:kira-bruneau/nixpkgs/git-review";
+  };
+}
+```
+
+2. Apply it with an overlay:
+
+```nix
+# file: configuration.nix
+{ pkgs, nixpkgs-git-review-bump, ... }: 
+
+let
+  pkgs-git-review = import nixpkgs-git-review-bump { inherit (pkgs) system; };
+in
+{
+  nixpkgs.overlays = [
+    (final: prev: {
+      git-review = pkgs-git-review.git-review;
+    })
+  ];
+}
+```
+
+Package sets such as KDE (and previously GNOME) have their own way of [overriding packages](https://wiki.nixos.org/wiki/KDE#Customizing_nixpkgs).
+
+Overriding modules becomes finicky when you want to try out a module update PR. You must disable the old module first, add the module from the PR, and reference relative file paths, all while hoping that it works in the end. And add dependant packages with overlays.
+
+```nix
+# file: configuration.nix
+{ pkgs, nixpkgs-pocket-id, ... }:
+
+{
+  disabledModules = [
+    "services/security/pocket-id.nix"
+  ];
+  imports = [
+    "${nixpkgs-pocket-id}/nixos/modules/services/security/pocket-id.nix"
+  ];
+
+  nixpkgs.overlays =
+    let
+      pkgs-pocket-id = import nixpkgs-pocket-id { inherit (pkgs) system; };
+    in
+    [
+      (final: prev: {
+        pocket-id = pkgs-pocket-id.pocket-id;
+      })
+    ];
+}
+```
+
 ## Contributing
 
 Bug reports, feature requests, and PRs are welcome!
