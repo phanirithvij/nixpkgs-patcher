@@ -1,14 +1,15 @@
+
 # nixpkgs-patcher
 
 Using [nixpkgs](https://github.com/NixOS/nixpkgs) pull requests that haven't landed into your channel has never been easier!
 
 ## Getting Started
 
-### Install nixpkgs-patch
+### Install nixpkgs-patcher
 
 Modify your flake accordingly:
-- use `nixpkgs-patcher.lib.nixosSystem` instead of `nixpkgs.lib.nixosSystem`
-- ensure that you pass the `inputs` to `specialArgs`
+- Use `nixpkgs-patcher.lib.nixosSystem` instead of `nixpkgs.lib.nixosSystem`
+- Ensure that you pass the `inputs` to `specialArgs`
 
 ```nix
 # file: flake.nix
@@ -21,7 +22,7 @@ Modify your flake accordingly:
   outputs =
     { nixpkgs-patcher, ... }@inputs:
     {
-      nixosConfigurations.yourhostname = nixpkgs-patcher.lib.nixosSystem {
+      nixosConfigurations.yourHostname = nixpkgs-patcher.lib.nixosSystem {
         modules = [
           ./configuration.nix
           ./hardware-configuration.nix
@@ -34,7 +35,7 @@ Modify your flake accordingly:
 
 ### Add a PR
 
-Create a new input that starts with `nixpkgs-patch-`, which points to the diff of your PR and indicates that it's not a flake. In this example, we perform a package bump for `git-review`. The PR number is `410328` (included twice in the link), and the `~1` indicates that we want the diff of the last commit.
+Create a new input that starts with `nixpkgs-patch-`, which points to the diff of your PR and indicates that it's not a flake. In this example, we perform a package bump for `git-review`. The PR number is `410328`, and we take the diff between the master branch and it.
 
 ```nix
 # file: flake.nix
@@ -43,9 +44,184 @@ Create a new input that starts with `nixpkgs-patch-`, which points to the diff o
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     nixpkgs-patcher.url = "github:gepbird/nixpkgs-patcher";
     nixpkgs-patch-git-review-bump = {
-      url = "https://github.com/NixOS/nixpkgs/compare/pull/410328/head~1...pull/410328/head.diff"
+      url = "https://github.com/NixOS/nixpkgs/compare/master...pull/410328/head.diff";
       flake = false;
     };
+  };
+}
+```
+
+Rebuild your system and enjoy using the PRs early! This is likely everything you need to know to use this flake effectively. However, there are additional configuration options for more advanced use cases.
+
+## Configuration
+
+### Using Different Base nixpkgs
+
+By default, this flake assumes that you have an input called `nixpkgs`. It's possible that you have `nixpkgs-unstable` and `nixpkgs-stable` (or named them entirely differently). In that case, you can configure which should be used as a base.
+
+```nix
+# file: flake.nix
+{
+  outputs =
+    { nixpkgs-patcher, nixpkgs-stable, nixpkgs-unstable, ... }@inputs:
+    {
+      nixosConfigurations.yourHostname = nixpkgs-patcher.lib.nixosSystem {
+        # ...
+        nixpkgsPatcher.nixpkgs = nixpkgs-unstable;
+      };
+    };
+}
+```
+
+### Avoiding `specialArgs` Pollution
+
+If you don't want to pass down every input to `specialArgs`, or if you have a different structure for it, you can provide your inputs in another way.
+
+```nix
+# file: flake.nix
+{
+  outputs =
+    { nixpkgs-patcher, foo-flake, ... }@inputs:
+    {
+      nixosConfigurations.yourHostname = nixpkgs-patcher.lib.nixosSystem {
+        # ...
+        specialArgs = { inherit (inputs) foo-flake }; # keep your specialArgs however it was before
+        nixpkgsPatcher.inputs = inputs;
+      };
+    };
+}
+```
+
+### Naming Patches Differently
+
+If you don't want to start every patch's name with `nixpkgs-patch-`, you can change the regex that is used to filter the inputs.
+
+```nix
+# file: flake.nix
+{
+  inputs = {
+    # ...
+    # all of these will be treated as patches because they contain "nix-pr"
+    git-review-nix-pr = ...;
+    nix-pr-mycelium = ...;
+  };
+
+  outputs =
+    { nixpkgs-patcher, ... }@inputs:
+    {
+      nixosConfigurations.yourHostname = nixpkgs-patcher.lib.nixosSystem {
+        # ...
+        nixpkgsPatcher.patchInputRegex = ".*nix-pr.*"; # default: "^nixpkgs-patch-.*"
+      };
+    };
+}
+```
+
+## Adding Patches
+
+### Using Flake Inputs
+
+This is the fastest way in my opinion, because all you have to do is add a flake input. Updating flake inputs will also update your patches. Here are some examples:
+
+```nix
+# file: flake.nix
+{
+  inputs = {
+    # ...
+
+    # include a package bump from a nixpkgs PR
+    nixpkgs-patch-git-review-bump = {
+      url = "https://github.com/NixOS/nixpkgs/compare/master...pull/410328/head.diff";
+      flake = false;
+    };
+
+    # include a new module from a nixpkgs PR
+    nixpkgs-patch-lasuite-docs-module-init = {
+      url = "https://github.com/NixOS/nixpkgs/compare/master...pull/401798/head.diff";
+      flake = false;
+    };
+
+    # include a patch from your (or someone else's) fork of nixpkgs by a branch name
+    nixpkgs-patch-lasuite-docs-module-init = {
+      url = "https://github.com/NixOS/nixpkgs/compare/master...gepbird:nixpkgs:xppen-init-v3-v4-nixos-module";
+      flake = false;
+    };
+
+    # local patch (don't forget to git add the file!)
+    nixpkgs-patch-git-review-bump = {
+      url = "./patches/git-review-bump.patch";
+      flake = false;
+    };
+
+    # patches are ordered and applied alphabetically; if one patch depends on another, you can prefix them with a number to make the ordering clear
+    nixpkgs-patch-10-mycelium-0-6-0 = {
+      url = "https://github.com/NixOS/nixpkgs/compare/pull/master...pull/402466/head.diff";
+      flake = false;
+    };
+    nixpkgs-patch-20-mycelium-0-6-1 = {
+      url = "https://github.com/NixOS/nixpkgs/compare/pull/master...pull/410367/head.diff";
+      flake = false;
+    };
+
+    # don't compare against master, but take the last x (in this case 5) commits of the PR
+    nixpkgs-patch-lasuite-docs-module-init = {
+      url = "https://github.com/NixOS/nixpkgs/compare/pull/401798/head~5...pull/401798/head.diff";
+      flake = false;
+    };
+  };
+}
+```
+
+### Using nixpkgsPatcher Config
+
+You can also define patches similarly to how you configured this flake. Provide a `nixpkgsPatcher.patches` attribute to `nixosSystem` that takes in `pkgs` and outputs a list of patches.
+
+```nix
+# file: flake.nix
+{
+  outputs =
+    { nixpkgs-patcher, ... }@inputs:
+    {
+      nixosConfigurations.yourHostname = nixpkgs-patcher.lib.nixosSystem {
+        # ...
+        nixpkgsPatcher.patches =
+          pkgs: with pkgs; [
+            (fetchpatch2 {
+              name = "git-review-bump.patch";
+              url = "https://github.com/NixOS/nixpkgs/compare/master...pull/410328/head.diff";
+              hash = ""; # rebuild, wait for nix to fail and give you the hash, then put it here
+            })
+            (fetchpatch2 {
+              # ...
+            })
+          ];
+      };
+    };
+}
+```
+
+### Using Your Configuration
+
+After installing nixpkgs-patcher, you can apply patches from your config without touching flake.nix.
+
+```nix
+# file: configuration.nix
+{ pkgs, ... }: 
+
+{
+  environment.systemPackages = with pkgs; [
+    # ...
+  ];
+
+  nixpkgs-patcher = {
+    enable = true;
+    settings.patches = with pkgs; [
+      (fetchpatch2 {
+        name = "git-review-bump.patch";
+        url = "https://github.com/NixOS/nixpkgs/compare/master...pull/410328/head.diff";
+        hash = ""; # rebuild, wait for nix to fail and give you the hash, then put it here
+      })
+    ];
   };
 }
 ```
