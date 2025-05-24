@@ -5,7 +5,32 @@
     lib.nixosSystem =
       args:
       let
+        inherit (builtins)
+          attrValues
+          match
+          removeAttrs
+          ;
+
         die = msg: throw "[nixpkgs-patcher]: ${msg}";
+
+        # maybe try to import the flake instead, this is for mostly replicating nixosSystem from the flake:
+        # https://github.com/NixOS/nixpkgs/blob/a61befb69a171c7fe6fb141fca18e40624d7f55f/flake.nix#L64-L95
+        args' =
+          {
+            system = null;
+            modules = args.modules ++ [
+              (
+                { ... }:
+                {
+                  # TODO: set config.nixpkgs.flake.source
+                }
+              )
+            ];
+          }
+          // removeAttrs args [
+            "modules"
+            "nixpkgsPatcher"
+          ];
 
         config = args.nixpkgsPatcher or { };
         inputs =
@@ -15,21 +40,16 @@
           config.nixpkgs or inputs.nixpkgs
             or (die "Couldn't find your base nixpkgs. You need to pass the nixosSystem function an attrset with `nixpkgsPatcher.nixpkgs = inputs.nixpkgs` or name your main nixpkgs input `nixpkgs` and pass `specialArgs = inputs`.");
         patchInputRegex = config.patchInputRegex or "^nixpkgs-patch-.*";
-        systemInput = config.system or args.system or null;
+        systemInput = config.system or args'.system;
 
         system =
           if systemInput != null then
             systemInput
           else
-            (import "${nixpkgs}/nixos/lib/eval-config.nix" args).config.nixpkgs.hostPlatform.system;
+            (import "${nixpkgs}/nixos/lib/eval-config.nix" args').config.nixpkgs.hostPlatform.system;
 
         pkgs = import nixpkgs { inherit system; };
 
-        inherit (builtins)
-          attrValues
-          match
-          removeAttrs
-          ;
         inherit (nixpkgs.lib)
           filterAttrs
           ;
@@ -42,7 +62,6 @@
         };
         finalNixpkgs = if patches == [ ] then nixpkgs else patchedNixpkgs;
 
-        args' = removeAttrs args [ "nixpkgsPatcher" ];
         nixosSystem = import "${finalNixpkgs}/nixos/lib/eval-config.nix" args';
       in
       nixosSystem;
