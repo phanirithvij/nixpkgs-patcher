@@ -24,19 +24,25 @@
             (import "${nixpkgs}/nixos/lib/eval-config.nix" args).config.nixpkgs.hostPlatform.system;
 
         pkgs = import nixpkgs { inherit system; };
-        # take "nixpkgs" input as a base and apply patches that start with "nixpkgs-patch"
-        patches = builtins.attrValues (
-          nixpkgs.lib.filterAttrs (n: v: builtins.match patchInputRegex n != null) inputs
-        );
+
+        inherit (builtins)
+          attrValues
+          match
+          removeAttrs
+          ;
+        inherit (nixpkgs.lib)
+          filterAttrs
+          ;
+
+        patches = attrValues (filterAttrs (n: v: match patchInputRegex n != null) inputs);
         patchedNixpkgs = pkgs.applyPatches {
           name = "nixpkgs-patched";
           src = nixpkgs;
           inherit patches;
         };
-        # don't use the patchedNixpkgs without patches, it takes time to build it
         finalNixpkgs = if patches == [ ] then nixpkgs else patchedNixpkgs;
 
-        args' = builtins.removeAttrs args [ "nixpkgsPatcher" ];
+        args' = removeAttrs args [ "nixpkgsPatcher" ];
         nixosSystem = import "${finalNixpkgs}/nixos/lib/eval-config.nix" args';
       in
       nixosSystem;
