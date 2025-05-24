@@ -77,7 +77,6 @@
           config.nixpkgs or inputs.nixpkgs
             or (die "Couldn't find your base nixpkgs. You need to pass the nixosSystem function an attrset with `nixpkgsPatcher.nixpkgs = inputs.nixpkgs` or name your main nixpkgs input `nixpkgs` and pass `specialArgs = inputs`.");
         patchInputRegex = config.patchInputRegex or "^nixpkgs-patch-.*";
-        systemInput = config.system or args'.system;
         patchesFromConfig = config.patches or args.patches or (_: [ ]);
 
         inherit (nixpkgs.lib)
@@ -86,7 +85,7 @@
 
         evaledModules = import "${nixpkgs}/nixos/lib/eval-config.nix" args';
         system =
-          if systemInput != null then systemInput else evaledModules.config.nixpkgs.hostPlatform.system;
+          if args'.system != null then args'.system else evaledModules.config.nixpkgs.hostPlatform.system;
         pkgs = import nixpkgs { inherit system; };
 
         moduleConfig = evaledModules.config.nixpkgs-patcher;
