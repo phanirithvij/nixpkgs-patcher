@@ -30,6 +30,7 @@
           // removeAttrs args [
             "modules"
             "nixpkgsPatcher"
+            "patches"
           ];
 
         config = args.nixpkgsPatcher or { };
@@ -41,6 +42,7 @@
             or (die "Couldn't find your base nixpkgs. You need to pass the nixosSystem function an attrset with `nixpkgsPatcher.nixpkgs = inputs.nixpkgs` or name your main nixpkgs input `nixpkgs` and pass `specialArgs = inputs`.");
         patchInputRegex = config.patchInputRegex or "^nixpkgs-patch-.*";
         systemInput = config.system or args'.system;
+        patchesFromConfig = config.patches or args.patches or [ ];
 
         system =
           if systemInput != null then
@@ -54,8 +56,11 @@
           filterAttrs
           ;
 
-        patches = attrValues (filterAttrs (n: v: match patchInputRegex n != null) inputs);
+        patchesFromFlakeInputs = attrValues (filterAttrs (n: v: match patchInputRegex n != null) inputs);
+
+        patches = (patchesFromConfig pkgs) ++ patchesFromFlakeInputs;
         patchedNixpkgs = pkgs.applyPatches {
+          # TODO: add more metadata
           name = "nixpkgs-patched";
           src = nixpkgs;
           inherit patches;
