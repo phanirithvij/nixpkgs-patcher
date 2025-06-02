@@ -6,7 +6,6 @@
       args:
       let
         inherit (builtins)
-          attrValues
           match
           removeAttrs
           ;
@@ -80,6 +79,7 @@
         patchesFromConfig = config.patches or (_: [ ]);
 
         inherit (nixpkgs.lib)
+          attrsToList
           filterAttrs
           ;
 
@@ -91,7 +91,21 @@
         moduleConfig = evaledModules.config.nixpkgs-patcher;
         patchesFromModules = if moduleConfig.enable then moduleConfig.settings.patches else [ ];
 
-        patchesFromFlakeInputs = attrValues (filterAttrs (n: v: match patchInputRegex n != null) inputs);
+        patchesFromFlakeInputsRaw = attrsToList (
+          filterAttrs (n: v: match patchInputRegex n != null) inputs
+        );
+        # this is for setting a nicer name for the patch in the build log
+        patchesFromFlakeInputs = map (
+          patch:
+          pkgs.stdenvNoCC.mkDerivation {
+            inherit (patch) name;
+
+            phases = [ "installPhase" ];
+            installPhase = ''
+              cp -r ${patch.value.outPath} $out
+            '';
+          }
+        ) patchesFromFlakeInputsRaw;
 
         patches = (patchesFromConfig pkgs) ++ patchesFromFlakeInputs ++ patchesFromModules;
         patchedNixpkgs = pkgs.applyPatches {
