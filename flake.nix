@@ -98,7 +98,16 @@
           # TODO: add more metadata
           name = "nixpkgs-patched";
           src = nixpkgs;
+
           inherit patches;
+
+          nativeBuildInputs = with pkgs; [
+            bat
+          ];
+
+          failureHook = ''
+            find . -name "*.rej" -exec bat --pager never {} +
+          '';
         };
         finalNixpkgs = if patches == [ ] then nixpkgs else patchedNixpkgs;
 
