@@ -203,32 +203,6 @@ You can also define patches similarly to how you configured this flake. Provide 
 }
 ```
 
-### Using Your Configuration
-
-After installing nixpkgs-patcher, you can apply patches from your config without touching flake.nix.
-
-```nix
-# file: configuration.nix
-{ pkgs, ... }: 
-
-{
-  environment.systemPackages = with pkgs; [
-    # ...
-  ];
-
-  nixpkgs-patcher = {
-    enable = true;
-    settings.patches = with pkgs; [
-      (fetchpatch2 {
-        name = "git-review-bump.patch";
-        url = "https://github.com/NixOS/nixpkgs/compare/master...pull/410328/head.diff";
-        hash = ""; # rebuild, wait for nix to fail and give you the hash, then put it here
-      })
-    ];
-  };
-}
-```
-
 ## TODO
 
 - work with other flake outputs, not just `nixosConfiguration`
@@ -244,7 +218,7 @@ However, if you want to patch other flake inputs or use patches inside packages 
 |------------------------------                                               |----|----|----|
 | Patches from flake inputs                                                   | ✅ | ✅ | ❌ |
 | Patches using fetchpatch                                                    | ✅ | ❌ | ✅ |
-| Patches in NixOS modules                                                    | ✅ | ❌ | ❌ |
+| Patches in NixOS modules                                                    | ❌ | ❌ | ❌ |
 | Local only                                                                  | ✅ | ❌ | ✅ |
 | No extra eval time for local patching (cached)                              | ❌ | ✅ | ❌ |
 | Doesn't require additional tools                                            | ✅ | ❌ | ✅ |

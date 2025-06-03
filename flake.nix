@@ -19,45 +19,10 @@
             system = null;
             modules = args.modules ++ [
               (
-                { lib, ... }:
+                { ... }:
 
-                let
-                  inherit (lib)
-                    mkOption
-                    mkEnableOption
-                    literalExpression
-                    types
-                    ;
-                in
                 {
                   # TODO: set config.nixpkgs.flake.source
-
-                  options.nixpkgs-patcher = {
-                    enable = mkEnableOption "nixpkgs-patcher";
-                    settings = mkOption {
-                      type = types.submodule {
-                        options = {
-                          patches = lib.mkOption {
-                            type = types.listOf types.package;
-                            default = [ ];
-                            example = literalExpression ''
-                              [
-                                (pkgs.fetchpatch2 {
-                                  name = "foo-module-init.patch";
-                                  url = "https://github.com/NixOS/nixpkgs/compare/pull/123456/head~1...pull/123456/head.patch";
-                                  hash = "";
-                                })
-                              ]
-                            '';
-                            description = ''
-                              A list of patches to apply to the nixpkgs source.
-                            '';
-                          };
-                        };
-                      };
-                      default = { };
-                    };
-                  };
                 }
               )
             ];
@@ -88,9 +53,6 @@
           if args'.system != null then args'.system else evaledModules.config.nixpkgs.hostPlatform.system;
         pkgs = import nixpkgs { inherit system; };
 
-        moduleConfig = evaledModules.config.nixpkgs-patcher;
-        patchesFromModules = if moduleConfig.enable then moduleConfig.settings.patches else [ ];
-
         patchesFromFlakeInputsRaw = attrsToList (
           filterAttrs (n: v: match patchInputRegex n != null) inputs
         );
@@ -107,7 +69,7 @@
           }
         ) patchesFromFlakeInputsRaw;
 
-        patches = (patchesFromConfig pkgs) ++ patchesFromFlakeInputs ++ patchesFromModules;
+        patches = (patchesFromConfig pkgs) ++ patchesFromFlakeInputs;
         patchedNixpkgs = pkgs.applyPatches {
           # TODO: add more metadata
           name = "nixpkgs-patched";
