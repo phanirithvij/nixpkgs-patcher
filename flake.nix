@@ -14,52 +14,68 @@
 
         # maybe try to import the flake instead, this is for mostly replicating nixosSystem from the flake:
         # https://github.com/NixOS/nixpkgs/blob/a61befb69a171c7fe6fb141fca18e40624d7f55f/flake.nix#L64-L95
+        metadataModule =
+          { ... }:
+          {
+            # TODO: set config.nixpkgs.flake.source
+
+          };
+
+        nixpkgsPatcherNixosModule =
+          { lib, ... }:
+
+          let
+            inherit (lib)
+              mkOption
+              mkEnableOption
+              literalExpression
+              types
+              ;
+          in
+          {
+            options.nixpkgs-patcher = {
+              enable = mkEnableOption "nixpkgs-patcher";
+              settings = mkOption {
+                type = types.submodule {
+                  options = {
+                    patches = lib.mkOption {
+                      type = types.listOf types.package;
+                      default = [ ];
+                      example = literalExpression ''
+                        [
+                          (pkgs.fetchpatch2 {
+                            name = "foo-module-init.patch";
+                            url = "https://github.com/NixOS/nixpkgs/compare/pull/123456/head~1...pull/123456/head.patch";
+                            hash = "";
+                          })
+                        ]
+                      '';
+                      description = ''
+                        A list of patches to apply to the nixpkgs source.
+                      '';
+                    };
+                  };
+                };
+                default = { };
+              };
+            };
+          };
+
+        dontCheckModule =
+          { ... }:
+          {
+            # disable checking for an option doesn't exist and others
+            # needed when an option is only available in the patched nixpkgs
+            # but not in the original one
+            _module.check = false;
+          };
+
         args' =
           {
             system = null;
             modules = args.modules ++ [
-              (
-                { lib, ... }:
-
-                let
-                  inherit (lib)
-                    mkOption
-                    mkEnableOption
-                    literalExpression
-                    types
-                    ;
-                in
-                {
-                  # TODO: set config.nixpkgs.flake.source
-
-                  options.nixpkgs-patcher = {
-                    enable = mkEnableOption "nixpkgs-patcher";
-                    settings = mkOption {
-                      type = types.submodule {
-                        options = {
-                          patches = lib.mkOption {
-                            type = types.listOf types.package;
-                            default = [ ];
-                            example = literalExpression ''
-                              [
-                                (pkgs.fetchpatch2 {
-                                  name = "foo-module-init.patch";
-                                  url = "https://github.com/NixOS/nixpkgs/compare/pull/123456/head~1...pull/123456/head.patch";
-                                  hash = "";
-                                })
-                              ]
-                            '';
-                            description = ''
-                              A list of patches to apply to the nixpkgs source.
-                            '';
-                          };
-                        };
-                      };
-                      default = { };
-                    };
-                  };
-                }
-              )
+              metadataModule
+              nixpkgsPatcherNixosModule
             ];
           }
           // removeAttrs args [
@@ -83,17 +99,7 @@
           ;
 
         evalArgs = args' // {
-          modules = args'.modules ++ [
-            (
-              { ... }:
-              {
-                # disable checking for an option doesn't exist and others
-                # needed when an option is only available in the patched nixpkgs
-                # but not in the original one
-                _module.check = false;
-              }
-            )
-          ];
+          modules = args'.modules ++ [ dontCheckModule ];
         };
         evaledModules = import "${nixpkgs}/nixos/lib/eval-config.nix" evalArgs;
         system =
