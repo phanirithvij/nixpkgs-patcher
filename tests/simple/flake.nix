@@ -29,16 +29,8 @@
       checks.x86_64-linux.tests =
         let
           inherit (self.nixosConfigurations) patched unpatched;
-          inherit (nixpkgs) lib;
-          pkgs = import nixpkgs { system = "x86_64-linux"; };
-          runTests =
-            tests:
-            let
-              failedTests = lib.debug.runTests tests;
-            in
-            if (builtins.length failedTests) != 0 then throw (builtins.toJSON failedTests) else pkgs.hello;
         in
-        runTests {
+        (import ../lib.nix { inherit nixpkgs; }).runTests {
           testUnpatchedPackageVersion = {
             expr = unpatched.pkgs.git-review.version;
             expected = "2.4.0";
