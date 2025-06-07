@@ -1,0 +1,129 @@
+diff --git a/nixos/doc/manual/release-notes/rl-2511.section.md b/nixos/doc/manual/release-notes/rl-2511.section.md
+index 8ca8f4bd3f46d1..8ce0ca415f586e 100644
+--- a/nixos/doc/manual/release-notes/rl-2511.section.md
++++ b/nixos/doc/manual/release-notes/rl-2511.section.md
+@@ -14,6 +14,9 @@
+ 
+ - [FileBrowser](https://filebrowser.org/), a web application for managing and sharing files. Available as [services.filebrowser](#opt-services.filebrowser.enable).
+ 
++- [LACT](https://github.com/ilya-zlobintsev/LACT), a GPU monitoring and configuration tool, can now be enabled through [services.lact.enable](#opt-services.lact.enable).
++  Note that for LACT to work properly on AMD GPU systems, you need to enable [hardware.amdgpu.overdrive.enable](#opt-hardware.amdgpu.overdrive.enable).
++
+ - [SuiteNumérique Docs](https://github.com/suitenumerique/docs), a collaborative note taking, wiki and documentation web platform and alternative to Notion or Outline. Available as [services.lasuite-docs](#opt-services.lasuite-docs.enable).
+ 
+ ## Backward Incompatibilities {#sec-release-25.11-incompatibilities}
+diff --git a/nixos/modules/module-list.nix b/nixos/modules/module-list.nix
+index 27a2c3010c0b34..b618a08fc37933 100644
+--- a/nixos/modules/module-list.nix
++++ b/nixos/modules/module-list.nix
+@@ -646,6 +646,7 @@
+   ./services/hardware/kanata.nix
+   ./services/hardware/keyd.nix
+   ./services/hardware/kmonad.nix
++  ./services/hardware/lact.nix
+   ./services/hardware/lcd.nix
+   ./services/hardware/libinput.nix
+   ./services/hardware/lirc.nix
+diff --git a/nixos/modules/services/hardware/lact.nix b/nixos/modules/services/hardware/lact.nix
+new file mode 100644
+index 00000000000000..e16712338ab8ca
+--- /dev/null
++++ b/nixos/modules/services/hardware/lact.nix
+@@ -0,0 +1,39 @@
++{
++  config,
++  lib,
++  pkgs,
++  ...
++}:
++
++let
++  cfg = config.services.lact;
++in
++{
++  meta.maintainers = [ lib.maintainers.johnrtitor ];
++
++  options.services.lact = {
++    enable = lib.mkEnableOption null // {
++      description = ''
++        Whether to enable LACT, a tool for monitoring, configuring and overclocking GPUs.
++
++        ::: {.note}
++        If you are on an AMD GPU, it is recommended to enable overdrive mode by using
++        `hardware.amdgpu.overdrive.enable = true;` in your configuration.
++        See [LACT wiki](https://github.com/ilya-zlobintsev/LACT/wiki/Overclocking-(AMD)) for more information.
++        :::
++      '';
++    };
++
++    package = lib.mkPackageOption pkgs "lact" { };
++  };
++
++  config = lib.mkIf cfg.enable {
++    environment.systemPackages = [ cfg.package ];
++    systemd.packages = [ cfg.package ];
++
++    systemd.services.lactd = {
++      description = "LACT GPU Control Daemon";
++      wantedBy = [ "multi-user.target" ];
++    };
++  };
++}
+diff --git a/nixos/tests/all-tests.nix b/nixos/tests/all-tests.nix
+index 747ce639069565..a91b390baa9184 100644
+--- a/nixos/tests/all-tests.nix
++++ b/nixos/tests/all-tests.nix
+@@ -714,6 +714,7 @@ in
+   kthxbye = runTest ./kthxbye.nix;
+   kubernetes = handleTestOn [ "x86_64-linux" ] ./kubernetes { };
+   kubo = import ./kubo { inherit recurseIntoAttrs runTest; };
++  lact = runTest ./lact.nix;
+   ladybird = runTest ./ladybird.nix;
+   languagetool = runTest ./languagetool.nix;
+   lanraragi = runTest ./lanraragi.nix;
+diff --git a/nixos/tests/lact.nix b/nixos/tests/lact.nix
+new file mode 100644
+index 00000000000000..ebfda66ad11edc
+--- /dev/null
++++ b/nixos/tests/lact.nix
+@@ -0,0 +1,18 @@
++{ pkgs, ... }:
++{
++  name = "lact";
++  meta = {
++    inherit (pkgs.lact.meta) maintainers;
++  };
++
++  nodes.machine =
++    { config, pkgs, ... }:
++    {
++      services.lact.enable = true;
++    };
++
++  testScript = ''
++    machine.wait_for_unit("lactd.service")
++    machine.wait_for_file("/run/lactd.sock")
++  '';
++}
+diff --git a/pkgs/by-name/la/lact/package.nix b/pkgs/by-name/la/lact/package.nix
+index 8da5d876e93035..98d799aad36340 100644
+--- a/pkgs/by-name/la/lact/package.nix
++++ b/pkgs/by-name/la/lact/package.nix
+@@ -14,6 +14,7 @@
+   coreutils,
+   systemdMinimal,
+   nix-update-script,
++  nixosTests,
+   hwdata,
+   fuse3,
+   autoAddDriverRunpath,
+@@ -113,6 +114,9 @@ rustPlatform.buildRustPackage (finalAttrs: {
+   '';
+ 
+   passthru.updateScript = nix-update-script { };
++  passthru.tests = {
++    inherit (nixosTests) lact;
++  };
+ 
+   meta = {
+     description = "Linux GPU Configuration Tool for AMD and NVIDIA";
