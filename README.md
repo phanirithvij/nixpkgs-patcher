@@ -149,7 +149,7 @@ This is the fastest way in my opinion, because all you have to do is add a flake
 
     # local patch (don't forget to git add the file!)
     nixpkgs-patch-git-review-bump = {
-      url = "./patches/git-review-bump.patch";
+      url = "path:./patches/git-review-bump.patch";
       flake = false;
     };
 
