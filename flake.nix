@@ -47,7 +47,20 @@
           filterAttrs
           ;
 
-        evaledModules = import "${nixpkgs}/nixos/lib/eval-config.nix" args';
+        evalArgs = args' // {
+          modules = args'.modules ++ [
+            (
+              { ... }:
+              {
+                # disable checking for an option doesn't exist and others
+                # needed when an option is only available in the patched nixpkgs
+                # but not in the original one
+                _module.check = false;
+              }
+            )
+          ];
+        };
+        evaledModules = import "${nixpkgs}/nixos/lib/eval-config.nix" evalArgs;
         system =
           if args'.system != null then args'.system else evaledModules.config.nixpkgs.hostPlatform.system;
         pkgs = import nixpkgs { inherit system; };
