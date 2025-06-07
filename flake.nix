@@ -44,7 +44,7 @@
                 type = types.submodule {
                   options = {
                     patches = lib.mkOption {
-                      type = types.listOf types.package;
+                      type = types.listOf (types.either types.path types.package);
                       default = [ ];
                       example = literalExpression ''
                         [
