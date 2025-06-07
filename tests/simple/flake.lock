@@ -1,0 +1,53 @@
+{
+  "nodes": {
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1749307940,
+        "narHash": "sha256-Zo1AH9079axOQpWqLiaUzbL+NT/k4lSCdCwZMvEvLv4=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "dd90a8666b501e6068a1d56fe6f0b1da85ccac06",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "dd90a8666b501e6068a1d56fe6f0b1da85ccac06",
+        "type": "github"
+      }
+    },
+    "nixpkgs-patch-git-review-bump": {
+      "flake": false,
+      "locked": {
+        "narHash": "sha256-6gRTlUTnyE40iftKm2y6v6VdOwhczLmzcHlOq9k2uHc=",
+        "type": "file",
+        "url": "https://github.com/NixOS/nixpkgs/compare/dd90a8666b501e6068a1d56fe6f0b1da85ccac06...pull/410328/head.diff"
+      },
+      "original": {
+        "type": "file",
+        "url": "https://github.com/NixOS/nixpkgs/compare/dd90a8666b501e6068a1d56fe6f0b1da85ccac06...pull/410328/head.diff"
+      }
+    },
+    "nixpkgs-patcher": {
+      "locked": {
+        "lastModified": 0,
+        "narHash": "sha256-TVAdDyjSu+O8nkW595RpLU1Ha15rDs91zHiS5NvrCFQ=",
+        "path": "../..",
+        "type": "path"
+      },
+      "original": {
+        "path": "../..",
+        "type": "path"
+      }
+    },
+    "root": {
+      "inputs": {
+        "nixpkgs": "nixpkgs",
+        "nixpkgs-patch-git-review-bump": "nixpkgs-patch-git-review-bump",
+        "nixpkgs-patcher": "nixpkgs-patcher"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}
