@@ -15,10 +15,15 @@
         # maybe try to import the flake instead, this is for mostly replicating nixosSystem from the flake:
         # https://github.com/NixOS/nixpkgs/blob/a61befb69a171c7fe6fb141fca18e40624d7f55f/flake.nix#L64-L95
         metadataModule =
-          { ... }:
+          { lib, ... }:
           {
-            # TODO: set config.nixpkgs.flake.source
+            config.nixpkgs.flake.source = toString patchedNixpkgs;
 
+            config.system.nixos.versionSuffix = ".${
+              lib.substring 0 8 nixpkgs.lastModifiedDate or "19700101"
+            }.${nixpkgs.shortRev or "dirty"}${if patches != [ ] then "-patched" else ""}";
+
+            config.system.nixos.revision = nixpkgs.rev;
           };
 
         nixpkgsPatcherNixosModule =
@@ -127,7 +132,6 @@
 
         patches = (patchesFromConfig pkgs) ++ patchesFromFlakeInputs ++ patchesFromModules;
         patchedNixpkgs = pkgs.applyPatches {
-          # TODO: add more metadata
           name = "nixpkgs-patched";
           src = nixpkgs;
 

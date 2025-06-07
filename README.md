@@ -232,7 +232,6 @@ After installing nixpkgs-patcher, you can apply patches from your config without
 ## TODO
 
 - work with other flake outputs, not just `nixosConfiguration`
-- set metadata correctly for the flakes and patched nixpkgs
 
 ## Comparison with Alternatives
 
