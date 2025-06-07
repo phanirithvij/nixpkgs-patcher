@@ -30,7 +30,6 @@
           // removeAttrs args [
             "modules"
             "nixpkgsPatcher"
-            "patches"
           ];
 
         config = args.nixpkgsPatcher or { };
