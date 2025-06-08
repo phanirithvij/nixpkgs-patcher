@@ -44,7 +44,7 @@ Create a new input that starts with `nixpkgs-patch-`, which points to the diff o
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     nixpkgs-patcher.url = "github:gepbird/nixpkgs-patcher";
     nixpkgs-patch-git-review-bump = {
-      url = "https://github.com/NixOS/nixpkgs/compare/master...pull/410328/head.diff";
+      url = "https://github.com/NixOS/nixpkgs/pull/410328.diff";
       flake = false;
     };
   };
@@ -131,19 +131,19 @@ This is the fastest way in my opinion, because all you have to do is add a flake
 
     # include a package bump from a nixpkgs PR
     nixpkgs-patch-git-review-bump = {
-      url = "https://github.com/NixOS/nixpkgs/compare/master...pull/410328/head.diff";
+      url = "https://github.com/NixOS/nixpkgs/pull/410328.diff";
       flake = false;
     };
 
     # include a new module from a nixpkgs PR
     nixpkgs-patch-lasuite-docs-module-init = {
-      url = "https://github.com/NixOS/nixpkgs/compare/master...pull/401798/head.diff";
+      url = "https://github.com/NixOS/nixpkgs/pull/401798.diff";
       flake = false;
     };
 
     # include a patch from your (or someone else's) fork of nixpkgs by a branch name
     nixpkgs-patch-lasuite-docs-module-init = {
-      url = "https://github.com/NixOS/nixpkgs/compare/master...gepbird:nixpkgs:xppen-init-v3-v4-nixos-module";
+      url = "https://github.com/NixOS/nixpkgs/compare/master...gepbird:nixpkgs:xppen-init-v3-v4-nixos-module.diff";
       flake = false;
     };
 
@@ -155,11 +155,17 @@ This is the fastest way in my opinion, because all you have to do is add a flake
 
     # patches are ordered and applied alphabetically; if one patch depends on another, you can prefix them with a number to make the ordering clear
     nixpkgs-patch-10-mycelium-0-6-0 = {
-      url = "https://github.com/NixOS/nixpkgs/compare/pull/master...pull/402466/head.diff";
+      url = "https://github.com/NixOS/nixpkgs/pull/402466.diff";
       flake = false;
     };
     nixpkgs-patch-20-mycelium-0-6-1 = {
-      url = "https://github.com/NixOS/nixpkgs/compare/pull/master...pull/410367/head.diff";
+      url = "https://github.com/NixOS/nixpkgs/pull/410367.diff";
+      flake = false;
+    };
+
+    # compare against master, nixos-unstable or a stable branch like nixos-25.05
+    nixpkgs-patch-lasuite-docs-module-init = {
+      url = "https://github.com/NixOS/nixpkgs/compare/nixos-unstable...pull/401798/head.diff";
       flake = false;
     };
 
@@ -168,12 +174,18 @@ This is the fastest way in my opinion, because all you have to do is add a flake
       url = "https://github.com/NixOS/nixpkgs/compare/pull/401798/head~5...pull/401798/head.diff";
       flake = false;
     };
+
+    # only a single commit
+    nixpkgs-patch-git-review-bump = {
+      url = "https://github.com/NixOS/nixpkgs/commit/1123658f39e7635e8d10a1b0691d2ad310ac24fc.diff";
+      flake = false;
+    };
   };
 }
 ```
 
-> [!WARNING]  
-> Using URLs like `https://github.com/NixOS/nixpkgs/pull/410328.diff` may be shorter and more convenient, but please be aware that this approach was unofficially rate limited to approximately 1 request per minute, with an initial limit of 5 requests in the past. It is advisable to use the longer format to avoid potential issues.
+> [!NOTE]  
+> Using URLs like `https://github.com/NixOS/nixpkgs/pull/410328.diff` is shorter and more convenient, but a few months ago this was heavily rate limited. If you run into such errors, you can use other formats mentioned above. 
 
 ### Using nixpkgsPatcher Config
 
@@ -191,7 +203,7 @@ You can also define patches similarly to how you configured this flake. Provide 
           pkgs: with pkgs; [
             (fetchpatch2 {
               name = "git-review-bump.patch";
-              url = "https://github.com/NixOS/nixpkgs/compare/master...pull/410328/head.diff";
+              url = "https://github.com/NixOS/nixpkgs/pull/410328.diff";
               hash = ""; # rebuild, wait for nix to fail and give you the hash, then put it here
             })
             (fetchpatch2 {
@@ -221,7 +233,7 @@ After installing nixpkgs-patcher, you can apply patches from your config without
     settings.patches = with pkgs; [
       (fetchpatch2 {
         name = "git-review-bump.patch";
-        url = "https://github.com/NixOS/nixpkgs/compare/master...pull/410328/head.diff";
+        url = "https://github.com/NixOS/nixpkgs/pull/410328.diff";
         hash = ""; # rebuild, wait for nix to fail and give you the hash, then put it here
       })
     ];

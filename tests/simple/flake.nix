@@ -3,7 +3,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/dd90a8666b501e6068a1d56fe6f0b1da85ccac06";
     nixpkgs-patcher.url = "path:../..";
     nixpkgs-patch-git-review-bump = {
-      url = "https://github.com/NixOS/nixpkgs/compare/dd90a8666b501e6068a1d56fe6f0b1da85ccac06...pull/410328/head.diff";
+      url = "https://github.com/NixOS/nixpkgs/pull/410328.diff";
       flake = false;
     };
   };

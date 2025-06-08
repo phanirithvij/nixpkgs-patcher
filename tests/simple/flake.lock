@@ -21,11 +21,11 @@
       "locked": {
         "narHash": "sha256-6gRTlUTnyE40iftKm2y6v6VdOwhczLmzcHlOq9k2uHc=",
         "type": "file",
-        "url": "https://github.com/NixOS/nixpkgs/compare/dd90a8666b501e6068a1d56fe6f0b1da85ccac06...pull/410328/head.diff"
+        "url": "https://github.com/NixOS/nixpkgs/pull/410328.diff"
       },
       "original": {
         "type": "file",
-        "url": "https://github.com/NixOS/nixpkgs/compare/dd90a8666b501e6068a1d56fe6f0b1da85ccac06...pull/410328/head.diff"
+        "url": "https://github.com/NixOS/nixpkgs/pull/410328.diff"
       }
     },
     "nixpkgs-patcher": {
