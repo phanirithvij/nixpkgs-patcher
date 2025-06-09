@@ -142,7 +142,14 @@
           ];
 
           failureHook = ''
-            find . -name "*.rej" -exec bat --pager never {} +
+            failedPatches=$(find . -name "*.rej")
+            for failedPatch in $failedPatches; do
+              echo "────────────────────────────────────────────────────────────────────────────────"
+              originalFile="${nixpkgs}/''${failedPatch%.rej}"
+              echo "Original file without any patches: $originalFile"
+              echo "Failed hunks of this file:"
+              bat --pager never --style plain $failedPatch
+            done
           '';
         };
         finalNixpkgs = if patches == [ ] then nixpkgs else patchedNixpkgs;
