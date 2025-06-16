@@ -131,7 +131,7 @@
           }
         ) patchesFromFlakeInputsRaw;
 
-        patches = (patchesFromConfig pkgs) ++ patchesFromFlakeInputs ++ patchesFromModules;
+        patches = patchesFromFlakeInputs ++ (patchesFromConfig pkgs) ++ patchesFromModules;
         patchedNixpkgs = pkgs.applyPatches {
           name = "nixpkgs-${substring 1 (-1) evaledModules.config.system.nixos.versionSuffix}";
           src = nixpkgs;
