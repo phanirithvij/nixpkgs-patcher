@@ -175,14 +175,27 @@ This is the fastest way in my opinion, because all you have to do is add a flake
       flake = false;
     };
 
-    # only a single commit
+    # only a single commit, you'll get the same patches every time
     nixpkgs-patch-git-review-bump = {
       url = "https://github.com/NixOS/nixpkgs/commit/1123658f39e7635e8d10a1b0691d2ad310ac24fc.diff";
+      flake = false;
+    };
+
+    # a range of commits, you'll get the same patches every time
+    nixpkgs-patch-git-review-bump = {
+      url = "https://github.com/NixOS/nixpkgs/compare/b024ced1aac25639f8ca8fdfc2f8c4fbd66c48ef...0330cef96364bfd90694ea782d54e64717aced63.diff";
       flake = false;
     };
   };
 }
 ```
+
+PRs can change over time, some commits might be added or replaced by a force-push.
+To update only a single patch you can run `nix flake update nixpkgs-patch-git-review-bump` for example.
+Running your usual flake update command like `nix flake update --commit-lock-file` will also update all patches.
+If you use an "unstable" URL format like `https://github.com/NixOS/nixpkgs/pull/410328.diff`, you can get different patches at different time, or even different patches at the sime time on different machines because Nix already downloaded and cached the patch on one machine but not on the other.
+To guarantee reproducibility, you can use the `https://github.com/NixOS/nixpkgs/commit/1123658f39e7635e8d10a1b0691d2ad310ac24fc.diff` format for single commits, or `https://github.com/NixOS/nixpkgs/compare/b024ced1aac25639f8ca8fdfc2f8c4fbd66c48ef...0330cef96364bfd90694ea782d54e64717aced63.diff` for a range of commits.
+To be extra sure you can use download the patch and reference to it by a local path, or use a different method that requires specifying a hash (see below).
 
 > [!NOTE]  
 > Using URLs like `https://github.com/NixOS/nixpkgs/pull/410328.diff` is shorter and more convenient, but a few months ago this was heavily rate limited. If you run into such errors, you can use other formats mentioned above. 
@@ -306,7 +319,7 @@ Alternatively, try to [create an intermediate patch](#create-an-intermediate-pat
 
 When you try to include multiple PRs, for example a package bump from v3 to v4, and another from v4 to v5, it's important that v3 to v4 patch gets applied first.
 Patches are applied in alphabetical order, for clarity you can name the first patch `nixpkgs-patch-10-mypackage-v4` and the second `nixpkgs-patch-10-mypackage-v5`.
-If you use patches from multiple sources, then it gets processed in this order: [flake inputs](#using-flake-inputs), [`nixpkgs-patcher.lib.nixosSystem` call](#using-nixpkgspatcher-config), [your configuration](#using-your-configuration)).
+If you use patches from multiple sources, then it gets processed in this order: [flake inputs](#using-flake-inputs), [`nixpkgs-patcher.lib.nixosSystem` call](#using-nixpkgspatcher-config), [your configuration](#using-your-configuration).
 
 ### Attach to the Build Shell
 
