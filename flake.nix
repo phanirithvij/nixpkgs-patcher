@@ -140,6 +140,7 @@
 
           nativeBuildInputs = with pkgs; [
             bat
+            breakpointHook
           ];
 
           failureHook = ''
@@ -150,7 +151,12 @@
               echo "Original file without any patches: $originalFile"
               echo "Failed hunks of this file:"
               bat --pager never --style plain $failedPatch
+              echo "────────────────────────────────────────────────────────────────────────────────"
             done
+
+            echo "Applying some patches failed. Check the build log above this message."
+            echo "You can inspect the state of the patched nixpkgs by attaching to the build shell, or press Ctrl+C to exit:"
+            # breakpontHook message gets inserted here
           '';
         };
         finalNixpkgs = if patches == [ ] then nixpkgs else patchedNixpkgs;
