@@ -8,6 +8,12 @@
         inherit (builtins)
           match
           removeAttrs
+          substring
+          ;
+
+        inherit (nixpkgs.lib)
+          attrsToList
+          filterAttrs
           ;
 
         die = msg: throw "[nixpkgs-patcher]: ${msg}";
@@ -98,11 +104,6 @@
         patchInputRegex = config.patchInputRegex or "^nixpkgs-patch-.*";
         patchesFromConfig = config.patches or (_: [ ]);
 
-        inherit (nixpkgs.lib)
-          attrsToList
-          filterAttrs
-          ;
-
         evalArgs = args' // {
           modules = args'.modules ++ [ dontCheckModule ];
         };
@@ -132,7 +133,7 @@
 
         patches = (patchesFromConfig pkgs) ++ patchesFromFlakeInputs ++ patchesFromModules;
         patchedNixpkgs = pkgs.applyPatches {
-          name = "nixpkgs-patched";
+          name = "nixpkgs-${substring 1 (-1) evaledModules.config.system.nixos.versionSuffix}";
           src = nixpkgs;
 
           inherit patches;
