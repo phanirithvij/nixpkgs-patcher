@@ -518,11 +518,11 @@ However, if you want to patch other flake inputs or use patches inside packages 
 
 | | nixpkgs-patcher | [nix-patcher](https://github.com/katrinafyi/nix-patcher) | [flake-input-patcher](https://github.com/jfly/flake-input-patcher) |
 |------------------------------                                               |----|----|----|
-| Patches from flake inputs                                                   | ✅ | ✅ | ❌ |
-| Patches using fetchpatch                                                    | ✅ | ❌ | ✅ |
-| Patches in NixOS modules                                                    | ✅ | ❌ | ❌ |
+| Patches defined as [flake inputs](#using-flake-inputs)                      | ✅ | ✅ | ❌ |
+| Patches defined in [your NixOS configuration](#using-your-configuration)    | ✅ | ❌ | ❌ |
+| Patches using [fetchpatch](#using-your-configuration)                       | ✅ | ❌ | ✅ |
 | Local only                                                                  | ✅ | ❌ | ✅ |
-| No extra eval time for local patching (cached)                              | ❌ | ✅ | ❌ |
+| No extra eval time spent with locally applying patches (cached)             | ❌ | ✅ | ❌ |
 | Doesn't require additional tools                                            | ✅ | ❌ | ✅ |
 | Automatic `system` detection                                                | ✅ | ✅ | ❌ |
 | Works for any flake on GitHub                                               | ❌ | ✅ | ✅ |
