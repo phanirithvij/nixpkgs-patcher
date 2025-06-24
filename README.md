@@ -127,8 +127,75 @@ This is the fastest way in my opinion, because all you have to do is add a flake
 # file: flake.nix
 {
   inputs = {
-    # ...
+    # include a package bump from a nixpkgs PR
+    nixpkgs-patch-git-review-bump = {
+      url = "https://github.com/NixOS/nixpkgs/pull/410328.diff";
+      flake = false;
+    };
+  };
+}
+```
 
+### Using nixpkgsPatcher Config
+
+You can also define patches similarly to how you configured this flake. Provide a `nixpkgsPatcher.patches` attribute to `nixosSystem` that takes in `pkgs` and outputs a list of patches.
+
+```nix
+# file: flake.nix
+{
+  outputs =
+    { nixpkgs-patcher, ... }@inputs:
+    {
+      nixosConfigurations.yourHostname = nixpkgs-patcher.lib.nixosSystem {
+        # ...
+        nixpkgsPatcher.patches =
+          pkgs: with pkgs; [
+            (fetchpatch2 {
+              name = "git-review-bump.patch";
+              url = "https://github.com/NixOS/nixpkgs/pull/410328.diff";
+              hash = ""; # rebuild, wait for nix to fail and give you the hash, then put it here
+            })
+            (fetchpatch2 {
+              # ...
+            })
+          ];
+      };
+    };
+}
+```
+
+### Using Your Configuration
+
+After installing nixpkgs-patcher, you can apply patches from your config without touching flake.nix.
+
+```nix
+# file: configuration.nix
+{ pkgs, ... }: 
+
+{
+  environment.systemPackages = with pkgs; [
+    # ...
+  ];
+
+  nixpkgs-patcher = {
+    enable = true;
+    settings.patches = with pkgs; [
+      (fetchpatch2 {
+        name = "git-review-bump.patch";
+        url = "https://github.com/NixOS/nixpkgs/pull/410328.diff";
+        hash = ""; # rebuild, wait for nix to fail and give you the hash, then put it here
+      })
+    ];
+  };
+}
+```
+
+### Example patch formats
+
+```nix
+# file: flake.nix
+{
+  inputs = {
     # include a package bump from a nixpkgs PR
     nixpkgs-patch-git-review-bump = {
       url = "https://github.com/NixOS/nixpkgs/pull/410328.diff";
@@ -190,6 +257,8 @@ This is the fastest way in my opinion, because all you have to do is add a flake
 }
 ```
 
+You can use these patch formats with all the 3 methods above, not only as flake inputs.
+
 PRs can change over time, some commits might be added or replaced by a force-push.
 To update only a single patch you can run `nix flake update nixpkgs-patch-git-review-bump` for example.
 Running your usual flake update command like `nix flake update --commit-lock-file` will also update all patches.
@@ -199,60 +268,6 @@ To be extra sure you can use download the patch and reference to it by a local p
 
 > [!NOTE]  
 > Using URLs like `https://github.com/NixOS/nixpkgs/pull/410328.diff` is shorter and more convenient, but a few months ago this was heavily rate limited. If you run into such errors, you can use other formats mentioned above. 
-
-### Using nixpkgsPatcher Config
-
-You can also define patches similarly to how you configured this flake. Provide a `nixpkgsPatcher.patches` attribute to `nixosSystem` that takes in `pkgs` and outputs a list of patches.
-
-```nix
-# file: flake.nix
-{
-  outputs =
-    { nixpkgs-patcher, ... }@inputs:
-    {
-      nixosConfigurations.yourHostname = nixpkgs-patcher.lib.nixosSystem {
-        # ...
-        nixpkgsPatcher.patches =
-          pkgs: with pkgs; [
-            (fetchpatch2 {
-              name = "git-review-bump.patch";
-              url = "https://github.com/NixOS/nixpkgs/pull/410328.diff";
-              hash = ""; # rebuild, wait for nix to fail and give you the hash, then put it here
-            })
-            (fetchpatch2 {
-              # ...
-            })
-          ];
-      };
-    };
-}
-```
-
-### Using Your Configuration
-
-After installing nixpkgs-patcher, you can apply patches from your config without touching flake.nix.
-
-```nix
-# file: configuration.nix
-{ pkgs, ... }: 
-
-{
-  environment.systemPackages = with pkgs; [
-    # ...
-  ];
-
-  nixpkgs-patcher = {
-    enable = true;
-    settings.patches = with pkgs; [
-      (fetchpatch2 {
-        name = "git-review-bump.patch";
-        url = "https://github.com/NixOS/nixpkgs/pull/410328.diff";
-        hash = ""; # rebuild, wait for nix to fail and give you the hash, then put it here
-      })
-    ];
-  };
-}
-```
 
 ## Troubleshooting
 
