@@ -29,7 +29,7 @@
               lib.substring 0 8 nixpkgs.lastModifiedDate or "19700101"
             }.${nixpkgs.shortRev or "dirty"}${if patches != [ ] then "-patched" else ""}";
 
-            config.system.nixos.revision = nixpkgs.rev;
+            config.system.nixos.revision = nixpkgs.rev or "dirty";
           };
 
         nixpkgsPatcherNixosModule =
