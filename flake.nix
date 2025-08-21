@@ -2,7 +2,7 @@
   description = "Add patches to nixpkgs seamlessly";
 
   outputs = _: {
-    lib.nixosSystem =
+    lib =
       args:
       let
         inherit (builtins)
@@ -81,18 +81,17 @@
             _module.check = false;
           };
 
-        args' =
-          {
-            system = null;
-            modules = args.modules ++ [
-              metadataModule
-              nixpkgsPatcherNixosModule
-            ];
-          }
-          // removeAttrs args [
-            "modules"
-            "nixpkgsPatcher"
+        args' = {
+          system = null;
+          modules = args.modules ++ [
+            metadataModule
+            nixpkgsPatcherNixosModule
           ];
+        }
+        // removeAttrs args [
+          "modules"
+          "nixpkgsPatcher"
+        ];
 
         config = args.nixpkgsPatcher or { };
         inputs =
@@ -160,10 +159,12 @@
             # breakpontHook message gets inserted here
           '';
         };
-        finalNixpkgs = if patches == [ ] then nixpkgs else patchedNixpkgs;
+        nixpkgs' = if patches == [ ] then nixpkgs else patchedNixpkgs;
 
-        nixosSystem = import "${finalNixpkgs}/nixos/lib/eval-config.nix" args';
+        nixosSystem = import "${nixpkgs'}/nixos/lib/eval-config.nix" args';
       in
-      nixosSystem;
+      {
+        inherit nixosSystem nixpkgs' args';
+      };
   };
 }
