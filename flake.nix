@@ -18,6 +18,11 @@
 
         die = msg: throw "[nixpkgs-patcher]: ${msg}";
 
+        # system fallback
+        defaultSystemModule = {
+          nixpkgs.hostPlatform = builtins.currentSystem or "x86_64-linux";
+        };
+
         # maybe try to import the flake instead, this is for mostly replicating nixosSystem from the flake:
         # https://github.com/NixOS/nixpkgs/blob/a61befb69a171c7fe6fb141fca18e40624d7f55f/flake.nix#L64-L95
         metadataModule =
@@ -83,15 +88,17 @@
 
         args' = {
           system = null;
-          modules = args.modules ++ [
+          modules = (args.modules or [ defaultSystemModule ]) ++ [
             metadataModule
             nixpkgsPatcherNixosModule
           ];
         }
-        // removeAttrs args [
-          "modules"
-          "nixpkgsPatcher"
-        ];
+        // removeAttrs args (
+          [
+            "nixpkgsPatcher"
+          ]
+          ++ (if args ? modules then [ "modules" ] else [ ])
+        );
 
         config = args.nixpkgsPatcher or { };
         inputs =
